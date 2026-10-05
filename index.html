@@ -174,7 +174,25 @@ body:not(.has-data) .range{opacity:.4;pointer-events:none}
 .card-body{padding:12px 16px 16px}
 .row{display:grid;gap:var(--gap)}
 .row-chart{grid-template-columns:minmax(0,2.2fr) minmax(280px,1fr)}
-.row-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.analytics-row{position:relative}
+.analytics-toggle{
+  position:absolute;right:8px;top:8px;z-index:4;display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--line);background:color-mix(in srgb,var(--surface-solid) 82%,transparent);
+  color:var(--muted);padding:4px 7px 4px 8px;border-radius:999px;font:600 10px/1 var(--font-display);
+  letter-spacing:.08em;text-transform:uppercase;backdrop-filter:blur(6px);transition:border-color .15s,color .15s,background .15s
+}
+.analytics-toggle:hover{color:var(--text);border-color:var(--line-strong)}
+.analytics-switch{position:relative;width:22px;height:12px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line-strong);display:block}
+.analytics-switch i{position:absolute;left:2px;top:2px;width:6px;height:6px;border-radius:50%;background:var(--accent);transition:transform .18s}
+.analytics-row.is-collapsed .analytics-switch i{transform:translateX(10px);background:var(--muted)}
+.analytics-row.is-collapsed .chart-card> :not(.card-head),
+.analytics-row.is-collapsed .period-card> :not(.card-head){display:none!important}
+.analytics-row.is-collapsed .chart-card .card-head>*:not(.card-title){display:none}
+.analytics-row.is-collapsed .chart-card .card-head,
+.analytics-row.is-collapsed .period-card .card-head{padding-top:11px;padding-bottom:11px}
+@media(max-width:900px){.analytics-toggle{right:6px;top:6px}.analytics-toggle-label{display:none}}
+
+.row-3{grid-template-columns:repeat(2,minmax(0,1fr))}
 .sw{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px}
 .sw-drop{background:var(--s-drop)}
 .sw-mat{background:var(--s-mat)}
@@ -336,22 +354,6 @@ body:not(.has-data) .range{opacity:.4;pointer-events:none}
 .dbreak-bar{grid-column:2/-1;height:5px;border-radius:999px;background:var(--surface-2);overflow:hidden}
 .dbreak-bar i{display:block;height:100%;border-radius:999px;background:var(--dungeon-color)}
 
-/* ---------- top earners ---------- */
-#topEarners{display:flex;flex-direction:column;gap:12px}
-.earner{
-  display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;
-  column-gap:10px;row-gap:5px;font-size:13px
-}
-.earner-rank{
-  width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:11px;font-weight:700;
-  color:var(--text-2);background:var(--surface-2);border:1px solid var(--line)
-}
-.earner:first-child .earner-rank{color:var(--accent-ink);background:var(--accent);border-color:transparent}
-.earner-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.earner-val{font-weight:700;font-variant-numeric:tabular-nums lining-nums}
-.earner-bar{grid-column:2/-1;height:5px;border-radius:999px;background:var(--surface-2);overflow:hidden}
-.earner-bar i{display:block;height:100%;border-radius:999px;background:var(--s-mat)}
-.earner-sub{grid-column:2/-1;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums lining-nums}
 
 /* ---------- elite ---------- */
 .elite-body{display:flex;flex-direction:column;gap:10px}
@@ -509,7 +511,6 @@ body.has-data .dash>*:nth-child(4){animation-delay:.18s}
   .range{grid-column:1/-1;grid-row:2;justify-content:center}
   .row-chart{grid-template-columns:1fr}
   .row-3{grid-template-columns:1fr 1fr}
-  .row-3 .elite-card{grid-column:1/-1}
   .elite-body{flex-direction:row;flex-wrap:wrap}
   .elite-line{flex:1 1 260px}
   .elite-note{flex-basis:100%}
@@ -766,10 +767,10 @@ body.has-data .dash>*:nth-child(4){animation-delay:.18s}
   letter-spacing:.1em;text-transform:uppercase;font-size:12px;text-shadow:0 1px 0 rgba(0,0,0,.6)
 }
 .theme-metin2 .apply-btn{font-family:var(--font-display)}
-.theme-metin2 .rate, .theme-metin2 .qty, .theme-metin2 .search input, .theme-metin2 .meter, .theme-metin2 .meter i, .theme-metin2 .split, .theme-metin2 .dbreak-bar, .theme-metin2 .dbreak-bar i, .theme-metin2 .earner-bar, .theme-metin2 .earner-bar i, .theme-metin2 .dstack{border-radius:3px}
+.theme-metin2 .rate, .theme-metin2 .qty, .theme-metin2 .search input, .theme-metin2 .meter, .theme-metin2 .meter i, .theme-metin2 .split, .theme-metin2 .dbreak-bar, .theme-metin2 .dbreak-bar i, .theme-metin2 .dstack{border-radius:3px}
 .theme-metin2 .rate{background:rgba(0,0,0,.35)}
 .theme-metin2 .qty{color:#f6e7bd;background:rgba(226,189,98,.1)}
-.theme-metin2 .earner-rank, .theme-metin2 .favorite-btn{border-radius:3px}
+.theme-metin2 .favorite-btn{border-radius:3px}
 .theme-metin2 .meter{box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
 .theme-metin2 .meter i{background:linear-gradient(180deg,#f0cf7a,#b8892f)}
 .theme-metin2 .elite-line, .theme-metin2 .period-main{box-shadow:inset 0 2px 6px rgba(0,0,0,.45)}
@@ -900,7 +901,11 @@ body.has-data .dash>*:nth-child(4){animation-delay:.18s}
       </article>
     </section>
 
-    <section class="row row-chart">
+    <section class="row row-chart analytics-row" id="analyticsRow">
+      <button class="analytics-toggle" id="analyticsToggle" type="button" aria-expanded="true" title="Collapse analytics">
+        <span class="analytics-toggle-label">Analytics</span>
+        <span class="analytics-switch" aria-hidden="true"><i></i></span>
+      </button>
       <article class="card chart-card">
         <header class="card-head">
           <h2 class="card-title">Yang over time</h2>
@@ -953,11 +958,6 @@ body.has-data .dash>*:nth-child(4){animation-delay:.18s}
           </div>
           <div class="dungeon-break" id="dungeonTags"></div>
         </div>
-      </article>
-
-      <article class="card earners-card">
-        <header class="card-head"><h2 class="card-title">Top earners</h2><span class="card-meta">by material value</span></header>
-        <div class="card-body" id="topEarners"></div>
       </article>
 
       <article class="card elite-card">
@@ -1435,7 +1435,6 @@ function update(){
 
   renderDungeons(dungeonEvents);
   renderMaterials(items,activeHours,prices);
-  renderTopEarners(items,prices);
   renderYangChart(selected,from,to,prices);
   cleanAllIcons();
 }
@@ -1565,7 +1564,6 @@ function updateMaterialTotalsFromInputs(){
     magicOrbCount, magicOrbValue,
     superEliteCount, superEliteYang
   }, true);
-  renderTopEarners(itemCounts, prices);
   scheduleYangChart(selected, from, to, prices);
 }
 
@@ -1667,6 +1665,12 @@ function renderMaterials(items,hours,prices){
         inp.value=sanitized;
       }
 
+      const itemName=decodeURIComponent(inp.dataset.item);
+      const livePrices=loadPrices();
+      livePrices[itemName]=inp.value;
+      savePrices(livePrices);
+      currentMaterialContext.prices={...livePrices};
+
       const row=inp.closest(".material-row");
       const qty=Number(row.dataset.qty)||0;
       const unit=parseYangPrice(inp.value);
@@ -1681,6 +1685,13 @@ function renderMaterials(items,hours,prices){
 
       // Save and recalculate Elite/Material/Total immediately.
       updateMaterialTotalsFromInputs();
+    });
+    inp.addEventListener("blur",()=>{
+      const itemName=decodeURIComponent(inp.dataset.item);
+      const livePrices=loadPrices();
+      livePrices[itemName]=inp.value;
+      savePrices(livePrices);
+      currentMaterialContext.prices={...livePrices};
     });
     inp.addEventListener("keydown",e=>{
       if(e.key==="Enter"){
@@ -1706,43 +1717,195 @@ function toggleFavorite(name){
   saveFavorites();
   update();
 }
+const LOG_WORKER_SOURCE = `
+const lootRe=/^\\[(\\d{2})\\/(\\d{2})\\/(\\d{2})\\]\\s+\\[(\\d{2}):(\\d{2}):(\\d{2})(?:[\\.,](\\d{1,3}))?\\]:\\s+You receive (\\d+) (.+?)\\.?\\s*$/;
+const eliteNames=new Set([
+  'skill book chest [m-g]','skill book chest [g-p]','divine blessing',
+  'divine enchanting',\"nataraja's medallion\"
+]);
+function normElite(name){
+  return String(name||'')
+    .replaceAll("’", "'")
+    .replaceAll("", "'")
+    .replaceAll("´", "'")
+    .replaceAll("�", "'")
+    .replace(/\\s+/g,' ')
+    .trim().toLowerCase();
+}
+function parseLine(line){
+  const m=line.match(lootRe); if(!m) return null;
+  const [,dd,mm,yy,hh,mi,ss,frac,qtyRaw,itemRaw]=m;
+  const millis=frac ? Number(frac.padEnd(3,'0')) : 0;
+  const ts=new Date(2000+Number(yy),Number(mm)-1,Number(dd),Number(hh),Number(mi),Number(ss),millis).getTime();
+  if(!Number.isFinite(ts)) return null;
+  return {ts,qty:Number(qtyRaw),item:itemRaw.trim()};
+}
+async function readFile(file, fileIndex, totalFiles, onLine){
+  const decoder=new TextDecoder('utf-8');
+  let buf='';
+  let bytesRead=0, lineCount=0;
+  const reportEvery=4*1024*1024;
+  let nextReport=reportEvery;
+  if(file.stream){
+    const reader=file.stream().getReader();
+    while(true){
+      const {value,done}=await reader.read();
+      if(done) break;
+      bytesRead += value.byteLength;
+      buf += decoder.decode(value,{stream:true});
+      const parts=buf.split('\\n');
+      buf=parts.pop()||'';
+      for(const raw of parts){
+        const line=raw.endsWith('\\r')?raw.slice(0,-1):raw;
+        lineCount++; onLine(line,fileIndex);
+      }
+      if(bytesRead>=nextReport){
+        postMessage({type:'progress',fileIndex,totalFiles,fileName:file.name,bytesRead,fileSize:file.size,lineCount});
+        nextReport=bytesRead+reportEvery;
+      }
+    }
+  }else{
+    const text=await file.text();
+    bytesRead=text.length;
+    const parts=text.split(/\\r?\\n/);
+    for(const line of parts){ lineCount++; onLine(line,fileIndex); }
+  }
+  buf += decoder.decode();
+  if(buf){ lineCount++; onLine(buf,fileIndex); }
+  postMessage({type:'fileDone',fileIndex,totalFiles,fileName:file.name,bytesRead:file.size,lineCount});
+}
+function findSuperElites(targetEvents, yangEvents){
+  targetEvents.sort((a,b)=>a[0]-b[0] || a[1]-b[1]);
+  yangEvents.sort((a,b)=>a[0]-b[0]);
+  const q=[]; const blocks=[]; const counts=new Map();
+  for(const e of targetEvents){
+    const t=e[0];
+    while(q.length && t-q[0][0]>2000){
+      const old=q.shift(); const n=old[2]; const c=counts.get(n)||0;
+      if(c<=1) counts.delete(n); else counts.set(n,c-1);
+    }
+    q.push(e); counts.set(e[2],(counts.get(e[2])||0)+1);
+    if(counts.size===eliteNames.size && [...eliteNames].every(n=>(counts.get(n)||0)>0)){
+      // Consume one occurrence of each required item so two very close
+      // Super Elite bursts can both be counted independently.
+      const take=new Set(eliteNames);
+      const taken=[];
+      for(let i=0;i<q.length && take.size;i++){
+        if(take.has(q[i][2])){ taken.push(i); take.delete(q[i][2]); }
+      }
+      if(!take.size){
+        const ts=Math.min(...taken.map(i=>q[i][0]));
+        let lo=0,hi=yangEvents.length;
+        while(lo<hi){ const mid=(lo+hi)>>1; if(yangEvents[mid][0]<ts) lo=mid+1; else hi=mid; }
+        let best=null,bestDist=Infinity;
+        for(let j=Math.max(0,lo-2);j<Math.min(yangEvents.length,lo+3);j++){
+          const d=Math.abs(yangEvents[j][0]-ts); if(d<=1000 && d<bestDist){best=yangEvents[j];bestDist=d;}
+        }
+        blocks.push([ts,best?best[0]:ts,best?best[1]:0]);
+        // Remove one occurrence of each required item from the queue.
+        const indices=taken.sort((a,b)=>b-a);
+        for(const idx of indices) q.splice(idx,1);
+        counts.clear(); for(const x of q) counts.set(x[2],(counts.get(x[2])||0)+1);
+      }
+    }
+  }
+  return blocks;
+}
+onmessage=async e=>{
+  const files=e.data.files||[];
+  const eventSeen=new Set();
+  const events=[];
+  const targets=[];
+  const yangs=[];
+  let rawEventCount=0;
+  try{
+    for(let fi=0;fi<files.length;fi++){
+      const file=files[fi];
+      await readFile(file,fi,files.length,(line)=>{
+        const parsed=parseLine(line); if(!parsed) return;
+        rawEventCount++;
+        const {ts,qty,item}=parsed;
+        const key=ts+'|'+qty+'|'+item;
+        if(eventSeen.has(key)) return;
+        eventSeen.add(key);
+        events.push([ts,qty,item]);
+        const norm=normElite(item);
+        if(eliteNames.has(norm)) targets.push([ts,fi, norm]);
+        if(norm==='yang' && String(qty).length>=7) yangs.push([ts,qty]);
+      });
+    }
+    events.sort((a,b)=>a[0]-b[0]);
+    const eliteBlocks=findSuperElites(targets,yangs);
+    postMessage({type:'done',events,eliteBlocks,rawEventCount,uniqueEventCount:events.length});
+  }catch(err){
+    postMessage({type:'error',message:String(err&&err.message||err)});
+  }
+};
+`;
+
+function createLogWorker(){
+  const blob=new Blob([LOG_WORKER_SOURCE],{type:'application/javascript'});
+  const url=URL.createObjectURL(blob);
+  const worker=new Worker(url);
+  worker._url=url;
+  return worker;
+}
+
 async function setLogs(files){
   const fileList=Array.from(files||[]).filter(Boolean);
   if(!fileList.length) return;
 
-  // Let the browser paint the loading state before the (synchronous) parse.
-  document.body.classList.add("is-loading");
-  await new Promise(resolve=>setTimeout(resolve,30));
+  document.body.classList.add('is-loading');
+  const worker=createLogWorker();
+  const started=performance.now();
 
-  try{
-    const texts=await Promise.all(fileList.map(f=>f.text()));
-    const parsed=texts.map(text=>parseLog(text));
-    const eliteBlocks=texts.flatMap(text=>parseSuperEliteBlocks(text));
-    state.events=dedupeEvents(parsed.flat());
-    state.eliteBlocks=dedupeEliteBlocks(eliteBlocks);
-    state.fileNames=fileList.map(f=>f.name);
-    state.range="all";
+  await new Promise(resolve=>{
+    worker.onmessage=e=>{
+      const m=e.data||{};
+      if(m.type==='progress'){
+        const mb=(m.bytesRead/1048576).toFixed(0);
+        const totalMb=(m.fileSize/1048576).toFixed(0);
+        $("fileInfo").textContent=`Reading ${m.fileIndex+1}/${m.totalFiles}: ${m.fileName} · ${mb}/${totalMb} MB`;
+        return;
+      }
+      if(m.type==='fileDone'){
+        $("fileInfo").textContent=`Read ${m.fileIndex+1}/${m.totalFiles}: ${m.fileName}`;
+        return;
+      }
+      if(m.type==='done'){
+        state.events=m.events.map(e=>({ts:new Date(e[0]),qty:e[1],item:e[2]}));
+        state.eliteBlocks=m.eliteBlocks.map(b=>({ts:new Date(b[0]),yangTs:new Date(b[1]),yang:b[2]}));
+        state.fileNames=fileList.map(f=>f.name);
+        state.range='all';
 
-    if(state.events.length){
-      $("fromInput").value=toLocalInput(state.events[0].ts);
-      $("toInput").value=toLocalInput(state.events[state.events.length-1].ts);
+        if(state.events.length){
+          $("fromInput").value=toLocalInput(state.events[0].ts);
+          $("toInput").value=toLocalInput(state.events[state.events.length-1].ts);
+        }
+
+        const duplicateCount=Math.max(0,(m.rawEventCount||0)-(m.uniqueEventCount||0));
+        const suffix=duplicateCount>0 ? ` · ${fmt(duplicateCount)} exact duplicate ${duplicateCount===1?'line':'lines'} ignored` : '';
+        const seconds=((performance.now()-started)/1000).toFixed(1);
+        $("fileInfo").textContent=`Loaded ${fmt(m.uniqueEventCount)} unique loot events from ${fileList.length} file${fileList.length===1?'':'s'} · ${seconds}s${suffix}`;
+
+        document.body.classList.toggle('has-data',state.events.length>0);
+        setActive(); update();
+        if(!state.events.length) toast('No readable loot events found in that file.');
+        cleanup();
+      }else if(m.type==='error'){
+        console.error(m.message);
+        toast('Could not read that file.');
+        cleanup();
+      }
+    };
+    function cleanup(){
+      worker.terminate();
+      URL.revokeObjectURL(worker._url);
+      document.body.classList.remove('is-loading');
+      resolve();
     }
-
-    const duplicateCount=parsed.reduce((sum,arr)=>sum+arr.length,0)-state.events.length;
-    const suffix=duplicateCount>0 ? ` · ${fmt(duplicateCount)} exact duplicate ${duplicateCount===1?"line":"lines"} ignored` : "";
-    $("fileInfo").textContent=`${fmt(state.events.length)} unique loot events from ${fileList.length} file${fileList.length===1?"":"s"}${suffix}`;
-
-    // The dashboard must be visible before update() so the chart can measure itself.
-    document.body.classList.toggle("has-data",state.events.length>0);
-    setActive(); update();
-
-    if(!state.events.length) toast("No readable loot events found in that file.");
-  }catch(err){
-    console.error(err);
-    toast("Could not read that file.");
-  }finally{
-    document.body.classList.remove("is-loading");
-  }
+    worker.postMessage({files:fileList});
+  });
 }
 
 async function readFiles(files){
@@ -1872,10 +2035,12 @@ function updateSortHeaders(){
 let currentMaterialContext={items:{},hours:1,prices:{}};
 
 function renderCurrentMaterials(){
+  const freshPrices=loadPrices();
+  currentMaterialContext.prices=freshPrices;
   renderMaterials(
     currentMaterialContext.items,
     currentMaterialContext.hours,
-    currentMaterialContext.prices
+    freshPrices
   );
   cleanAllIcons();
 }
@@ -1883,9 +2048,19 @@ function renderCurrentMaterials(){
 /* Wrap renderMaterials input storage without changing its calculation logic. */
 const originalRenderMaterials=renderMaterials;
 renderMaterials=function(items,hours,prices){
-  currentMaterialContext={items,hours,prices};
+  currentMaterialContext={items,hours,prices:{...prices}};
   return originalRenderMaterials(items,hours,prices);
 };
+
+const analyticsToggle=$("analyticsToggle");
+const analyticsRow=$("analyticsRow");
+if(analyticsToggle && analyticsRow){
+  analyticsToggle.addEventListener("click",()=>{
+    const collapsed=analyticsRow.classList.toggle("is-collapsed");
+    analyticsToggle.setAttribute("aria-expanded",String(!collapsed));
+    analyticsToggle.title=collapsed ? "Expand analytics" : "Collapse analytics";
+  });
+}
 
 updateSortHeaders();
 setActive();
@@ -1908,28 +2083,6 @@ document.addEventListener("input",e=>{
   });
 },{capture:true});
 
-document.addEventListener("change",e=>{
-  const el=e.target;
-  if(!el || !el.matches('input.price-input, input[data-price], .item-price input')) return;
-  requestAnimationFrame(()=>{
-    try{ refreshEliteFromCurrentPrices(); }catch(err){}
-  });
-},{capture:true});
-
-// data-live-elite-listener
-
-document.addEventListener("click",e=>{
-  const fav=e.target.closest(
-    '[data-favorite], .favorite, .fav-btn, .favorite-btn, .star, .fav-icon'
-  );
-  if(!fav) return;
-
-  requestAnimationFrame(()=>{
-    try{ refreshEliteFromCurrentPrices(); }catch(err){}
-  });
-},{capture:true});
-
-// data-live-favorite-elite
 
 /* =====================================================================
    UI LAYER — presentation only. Parsing and calculations live above.
@@ -2099,32 +2252,6 @@ function renderDungeonBreakdown(counts){
   }).join("");
 
   box.innerHTML=`<div class="dstack" role="img" aria-label="Share of runs per dungeon">${stack}</div><div class="dbreak-rows">${rows}</div>`;
-}
-
-/* ---------- top earners ---------- */
-function renderTopEarners(items,prices){
-  const box=$("topEarners");
-  if(!box) return;
-  const rows=Object.entries(items).map(([name,qty])=>{
-    const unit=parseYangPrice(prices[name] ?? "");
-    return {name,qty,unit,total:qty*unit};
-  }).filter(r=>r.total>0).sort((a,b)=>b.total-a.total || a.name.localeCompare(b.name));
-
-  if(!rows.length){
-    box.innerHTML='<div class="empty small">Enter unit prices in the materials table to see which drops earn the most.</div>';
-    return;
-  }
-  const sum=rows.reduce((s,r)=>s+r.total,0), top=rows.slice(0,5), max=top[0].total;
-  box.innerHTML=top.map((r,i)=>{
-    const p=r.total/sum*100;
-    return `<div class="earner">
-      <span class="earner-rank">${i+1}</span>
-      <span class="earner-name" title="${escapeHtml(r.name)}">${escapeHtml(r.name)}</span>
-      <span class="earner-val">${compact(r.total)}</span>
-      <span class="earner-bar"><i style="width:${Math.max(1.5,r.total/max*100).toFixed(2)}%"></i></span>
-      <span class="earner-sub">${fmt(r.qty)} × ${fmtUnit(r.unit)} ·${p>=10 ? p.toFixed(0) : p.toFixed(1)}% of material value</span>
-    </div>`;
-  }).join("");
 }
 
 /* ---------- Yang over time chart ---------- */

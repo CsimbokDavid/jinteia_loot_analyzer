@@ -1231,6 +1231,18 @@ function normalizeItemName(name){
     .toLowerCase();
 }
 
+// Canonical display names for loot variants that differ only by apostrophe
+// or text encoding. They are stored/rendered under one user-facing name.
+function canonicalItemName(name){
+  const normalized=normalizeItemName(name);
+  if(normalized==="nalantir's legacy") return "Nalantir's Legacy";
+  return String(name ?? "").replace(/\s+/g," ").trim();
+}
+
+function isNalantirLegacy(name){
+  return normalizeItemName(name)==="nalantir's legacy";
+}
+
 const DUNGEON_MAP = {
   "Elite Splinter":"Elite Portal",
   "Mystic Splinter":"Mystic Portal",
@@ -1356,7 +1368,8 @@ function update(){
   const dungeonEvents=[];
 
   for(const e of selected){
-    const lower=normalizeItemName(e.item);
+    const canonical=canonicalItemName(e.item);
+    const lower=normalizeItemName(canonical);
 
     // Yang is never shown as an item.
     if(lower==="yang"){
@@ -1369,10 +1382,15 @@ function update(){
     if(dungeonName){
       dungeonCounts[dungeonName]=(dungeonCounts[dungeonName]||0)+e.qty;
       for(let i=0;i<e.qty;i++) dungeonEvents.push({ts:e.ts,name:dungeonName});
+
+      // Nalantir's Legacy is intentionally also kept in Dropped Materials.
+      // All apostrophe/encoding variants are merged into the canonical name.
+      if(isNalantirLegacy(canonical))
+        items["Nalantir's Legacy"]=(items["Nalantir's Legacy"]||0)+e.qty;
       continue;
     }
 
-    items[e.item]=(items[e.item]||0)+e.qty;
+    items[canonical]=(items[canonical]||0)+e.qty;
   }
 
   const prices=loadPrices();
@@ -1498,9 +1516,15 @@ function updateMaterialTotalsFromInputs(){
   let dropped=0;
 
   for(const e of selected){
-    if(e.item.toLowerCase()==="yang") dropped+=e.qty;
-    else if(!DUNGEON_MAP_LOWER[normalizeItemName(e.item)])
-      itemCounts[e.item]=(itemCounts[e.item]||0)+e.qty;
+    const canonical=canonicalItemName(e.item);
+    const lower=normalizeItemName(canonical);
+    if(lower==="yang") dropped+=e.qty;
+    else if(DUNGEON_MAP_LOWER[lower]){
+      if(isNalantirLegacy(canonical))
+        itemCounts["Nalantir's Legacy"]=(itemCounts["Nalantir's Legacy"]||0)+e.qty;
+    }else{
+      itemCounts[canonical]=(itemCounts[canonical]||0)+e.qty;
+    }
   }
 
   let material=0;
@@ -2292,13 +2316,15 @@ function buildYangBuckets(selected,from,to,prices,maxBuckets){
 
   for(const e of selected){
     const i=Math.min(n-1,Math.max(0,Math.floor((e.ts.getTime()-start)/step)));
-    const lower=e.item.toLowerCase();
+    const canonical=canonicalItemName(e.item);
+    const lower=normalizeItemName(canonical);
     if(lower==="yang"){ dropped[i]+=e.qty; continue; }
-    if(DUNGEON_MAP_LOWER[normalizeItemName(e.item)]) continue;
-    let unit=unitCache.get(e.item);
+    if(DUNGEON_MAP_LOWER[lower] && !isNalantirLegacy(canonical)) continue;
+    const priceKey=isNalantirLegacy(canonical) ? "Nalantir's Legacy" : canonical;
+    let unit=unitCache.get(priceKey);
     if(unit===undefined){
-      unit=parseYangPrice(prices[e.item] ?? "");
-      unitCache.set(e.item,unit);
+      unit=parseYangPrice(prices[priceKey] ?? "");
+      unitCache.set(priceKey,unit);
     }
     if(unit) material[i]+=e.qty*unit;
   }

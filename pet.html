@@ -396,6 +396,7 @@ code{
 .level-presets button:hover,.level-presets button.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 .level-range{width:100%;accent-color:var(--accent);cursor:pointer}
 .hint{color:var(--muted);font-size:12.5px;margin:0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .bonus-table{width:100%;border-collapse:collapse;font-size:14px}
 .bonus-table th{
   padding:12px 16px;text-align:left;font:600 11px/1.2 var(--font-display);letter-spacing:.12em;text-transform:uppercase;
@@ -409,13 +410,28 @@ code{
 .bonus-table td.num{font-variant-numeric:tabular-nums}
 .bonus-table td.base{color:var(--muted)}
 .bonus-table td.cur{font-weight:800}
-.bonus-table tr[style] td:first-child,.bonus-table tr[style] td.cur{color:var(--bc)}
+.bonus-table tr[style] td.bonus-name,.bonus-table tr[style] td.cur{color:var(--bc)}
+.bonus-table th.fav-col,.bonus-table td.fav-col{width:44px;padding-right:0}
+.favorite-btn{
+  width:26px;height:26px;padding:0;border:1px solid var(--line-strong);border-radius:8px;
+  background:transparent;color:var(--muted);font-size:14px;line-height:1;display:grid;place-items:center;
+  opacity:.55;transition:opacity .15s,color .15s,border-color .15s,background .15s
+}
+.bonus-table tbody tr:hover .favorite-btn,.favorite-btn:focus-visible{opacity:1}
+.favorite-btn:hover{color:var(--fav);border-color:var(--fav)}
+.favorite-btn.favorited{
+  opacity:1;color:var(--fav);border-color:color-mix(in srgb,var(--fav) 55%,transparent);
+  background:color-mix(in srgb,var(--fav) 12%,transparent)
+}
+.bonus-table tbody tr.favorite-row{background:color-mix(in srgb,var(--fav) 6%,transparent);box-shadow:inset 3px 0 0 var(--fav)}
+.bonus-table tbody tr.favorite-last td{border-bottom:1px solid color-mix(in srgb,var(--fav) 40%,transparent)}
 .table-card{overflow:hidden}
 .table-card .card-head{padding-bottom:12px;border-bottom:1px solid var(--line)}
 .theme-metin2 .level-presets button{border-radius:3px;font-family:var(--font-display)}
 .theme-metin2 .level-input{border-radius:3px}
 .theme-metin2 .bonus-table th{font-weight:700;background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.25))}
 .theme-metin2 .bonus-table tbody tr:hover{background:rgba(226,189,98,.06)}
+.theme-metin2 .favorite-btn{border-radius:3px}
 @media(max-width:640px){
   .app{padding:8px 10px 28px}
   .topbar{position:static}
@@ -477,7 +493,7 @@ try{const t=localStorage.getItem('yangLootAnalyzerThemeV1');if(t==='metin2'){doc
   <section class="card table-card" aria-labelledby="tableTitle">
     <div class="card-head"><h2 class="card-title" id="tableTitle">Bonuses</h2><span class="card-meta" id="tableMeta"></span></div>
     <table class="bonus-table">
-      <thead><tr><th>Bonus</th><th class="num">Level 1</th><th class="num" id="curHead">Level 500</th></tr></thead>
+      <thead><tr><th class="fav-col"><span class="sr-only">Favorite</span></th><th>Bonus</th><th class="num">Level 1</th><th class="num" id="curHead">Level 500</th></tr></thead>
       <tbody id="bonusBody"></tbody>
     </table>
   </section>
@@ -518,11 +534,26 @@ const presetBtns=[...document.querySelectorAll('#presets button')];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,pct)=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+(pct?'%':'');
 
+const FAV_KEY='petBonusFavoritesV1';
+let favorites=new Set(), currentLevel=500;
+try{favorites=new Set(JSON.parse(localStorage.getItem(FAV_KEY)||'[]'))}catch{}
+function toggleFavorite(name){
+  favorites.has(name)?favorites.delete(name):favorites.add(name);
+  try{localStorage.setItem(FAV_KEY,JSON.stringify([...favorites]))}catch{}
+  render(currentLevel);
+}
 function render(level){
+  currentLevel=level;
   const mult=Math.pow(GROWTH,level-1);
   curHead.textContent=`Level ${level}`;
   metaEl.textContent=`×${mult.toLocaleString('en-US',{maximumFractionDigits:3})} vs level 1`;
-  bodyEl.innerHTML=BONUSES.map(b=>`<tr${b.color?` style="--bc:${b.color}"`:''}><td>${esc(b.name)}</td><td class="num base">${fmt(b.base,b.pct)}</td><td class="num cur">${fmt(b.base*mult,b.pct)}</td></tr>`).join('');
+  // Favorited rows are pinned to the top, both groups keep the original order.
+  const favs=BONUSES.filter(b=>favorites.has(b.name)), rest=BONUSES.filter(b=>!favorites.has(b.name));
+  bodyEl.innerHTML=[...favs,...rest].map((b,i)=>{
+    const fav=favorites.has(b.name), cls=fav?`favorite-row${i===favs.length-1&&rest.length?' favorite-last':''}`:'';
+    const label=fav?'Unfavorite':'Favorite';
+    return `<tr${cls?` class="${cls}"`:''}${b.color?` style="--bc:${b.color}"`:''}><td class="fav-col"><button type="button" class="favorite-btn${fav?' favorited':''}" data-name="${esc(b.name)}" title="${label}" aria-label="${label} ${esc(b.name)}" aria-pressed="${fav}">★</button></td><td class="bonus-name">${esc(b.name)}</td><td class="num base">${fmt(b.base,b.pct)}</td><td class="num cur">${fmt(b.base*mult,b.pct)}</td></tr>`;
+  }).join('');
   presetBtns.forEach(btn=>btn.classList.toggle('active',Number(btn.dataset.level)===level));
 }
 function setLevel(raw,fromInput){
@@ -541,6 +572,7 @@ levelInput.addEventListener('change',()=>{
 });
 levelRange.addEventListener('input',()=>setLevel(levelRange.value,false));
 presetBtns.forEach(btn=>btn.addEventListener('click',()=>setLevel(btn.dataset.level,false)));
+bodyEl.addEventListener('click',e=>{const btn=e.target.closest('.favorite-btn');if(btn) toggleFavorite(btn.dataset.name);});
 setLevel(levelInput.value,false);
 </script>
 <script>

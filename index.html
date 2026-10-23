@@ -798,6 +798,21 @@ body.has-data .dash>*:nth-child(4){animation-delay:.18s}
 .theme-metin2 .hero-feats b{font-family:var(--font-display);letter-spacing:.08em;color:var(--gold)}
 .theme-metin2 .drop-overlay-box{border-radius:var(--radius);border-style:solid;border-width:1px;box-shadow:0 0 0 4px rgba(0,0,0,.6),0 0 0 5px #a98439}
 .theme-metin2 .toast{border-color:#a98439}
+
+/* ---------- page switch (Yang loot <-> Pet bonus) ---------- */
+.page-link{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:none;
+  height:34px;padding:0 12px;border:1px solid var(--line-strong);border-radius:6px;
+  background:var(--surface-2);color:var(--text-2);font-weight:800;font-size:11px;
+  letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  transition:border-color .15s,background .15s,color .15s,box-shadow .15s
+}
+.page-link svg{width:14px;height:14px;flex:none}
+.page-link:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 14px color-mix(in srgb,var(--accent) 18%,transparent)}
+.theme-neon .page-link:hover{color:#00ff9d}
+.theme-metin2 .page-link{border-color:#a98439;color:#f0cf7a;background:rgba(0,0,0,.25);border-radius:3px;font-family:var(--font-display);letter-spacing:.1em}
+.theme-metin2 .page-link:hover{background:rgba(226,189,98,.12);color:#fff0c4}
+@media(max-width:640px){.page-link span{display:none}.page-link{width:34px;padding:0}}
 </style>
 </head>
 <body class="theme-neon">
@@ -814,6 +829,10 @@ body.has-data .dash>*:nth-child(4){animation-delay:.18s}
         <h1 class="brand-title">Yang Loot Analyzer</h1>
         <div class="file-info" id="fileInfo">No log loaded</div>
       </div>
+      <a class="page-link" href="pet.html" title="Open the Pet Bonus Calculator">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="10" r="2"/><circle cx="10" cy="5.5" r="2"/><circle cx="14" cy="5.5" r="2"/><circle cx="18" cy="10" r="2"/><path d="M12 11c-3 0-6 4.5-6 7a2.5 2.5 0 0 0 3.5 2.3c1.6-.7 3.4-.7 5 0A2.5 2.5 0 0 0 18 18c0-2.5-3-7-6-7z"/></svg>
+        <span>Pet Bonus</span>
+      </a>
     </div>
 
     <div class="range" role="group" aria-label="Time range">

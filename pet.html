@@ -500,33 +500,35 @@ try{const t=localStorage.getItem('yangLootAnalyzerThemeV1');if(t==='metin2'){doc
 </div>
 
 <script>
-// Known maximum values at pet level 500; level-1 values are derived from these.
+// base = fixed level-1 value. v = known maximum at pet level 500, used to derive the level-1 value when no base is set.
 const REF_LEVEL=500, GROWTH=1.005;
 const BONUSES=[
-  {name:'Portal Damage',v:71.20,pct:true},
-  {name:'Critical Hit Damage',v:11.44,pct:true},
+  {name:'Portal Damage',base:6,pct:true},
+  {name:'Critical Hit Damage',base:1,pct:true},
   {name:'Strong against Monsters',v:48.19,pct:true},
-  {name:'Skill Damage',v:45.17,pct:true},
-  {name:'Average Damage',v:46.98,pct:true},
-  {name:'Attack Value',v:296.11},
-  {name:'Chance to Drop Double Yang',v:69.27,pct:true},
-  {name:'Critical Hit Chance',v:71.92,pct:true},
-  {name:'All Skill Damage',v:11.93,pct:true,color:'#ff9f1c'},
-  {name:'Burn Damage',v:22.05,pct:true,color:'#ff4d2e'},
-  {name:'Curse Damage',v:22.41,pct:true,color:'#a855f7'},
-  {name:'Magic Power',v:20.72,pct:true,color:'#22d3ee'},
-  {name:'Poison Damage',v:21.56,pct:true,color:'#e3e335'},
-  {name:'Lightning Damage',v:6.38,pct:true,color:'#38a8ff'},
+  {name:'Skill Damage',base:4,pct:true},
+  {name:'Average Damage',base:4,pct:true},
+  {name:'Attack Value',base:25},
+  {name:'Chance to Drop Double Yang',base:6,pct:true},
+  {name:'Chance to Drop Double Item',base:6,pct:true},
+  {name:'Chance for More EXP',base:6,pct:true},
+  {name:'Critical Hit Chance',base:6,pct:true},
+  {name:'All Skill Damage',base:1,pct:true,color:'#ff9f1c'},
+  {name:'Burn Damage',base:2,pct:true,color:'#ff4d2e'},
+  {name:'Curse Damage',base:2,pct:true,color:'#a855f7'},
+  {name:'Magic Power',base:2,pct:true,color:'#22d3ee'},
+  {name:'Poison Damage',base:2,pct:true,color:'#e3e335'},
+  {name:'Lightning Damage',base:2,pct:true,color:'#38a8ff'},
   {name:'Casting Speed',v:29.27,pct:true},
   {name:'Max. MP',v:2486.66},
   {name:'Thorns',v:387.30},
   {name:'Piercing Hit Chance',v:68.91,pct:true},
-  {name:'Strong against Metin Stones',v:23.37,pct:true},
-  {name:'Attack Speed',v:22.41,pct:true},
+  {name:'Strong against Metin Stones',base:2,pct:true},
+  {name:'Attack Speed',base:2,pct:true},
   {name:'Resistance against Normal Damage',v:20.36,pct:true},
   {name:'Resistance against Critical Hits',v:65.65,pct:true},
   {name:'Resistance against Piercing Hits',v:33.85,pct:true}
-].map(b=>({...b,base:b.v/Math.pow(GROWTH,REF_LEVEL-1)}));
+].map(b=>({...b,base:b.base??b.v/Math.pow(GROWTH,REF_LEVEL-1)}));
 
 const levelInput=document.getElementById('level'), levelRange=document.getElementById('levelRange');
 const bodyEl=document.getElementById('bonusBody'), curHead=document.getElementById('curHead'), metaEl=document.getElementById('tableMeta');

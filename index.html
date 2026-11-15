@@ -1082,17 +1082,36 @@ function normalizeEliteItemName(name){
     .toLowerCase();
 }
 
+// A Super Elite burst contains all five items of ONE of these sets: the
+// English names or the German names (no mixing between the two sets).
+const SUPER_ELITE_SETS=[
+  ["Skill Book Chest [M-G]","Skill Book Chest [G-P]","Divine Blessing","Divine Enchanting","Nataraja's Medallion"],
+  ["Lektüre Truhe [M-G]","Lektüre Truhe [G-P]","Göttlicher Segen","Göttliches Verzaubern","Natarajas Medaillon"]
+];
+// normalized item name -> "set:slot". Umlauts may arrive as U+FFFD (which
+// normalizeEliteItemName turns into an apostrophe) when the log is not UTF-8.
+const SUPER_ELITE_IDS=new Map();
+SUPER_ELITE_SETS.forEach((set,si)=>set.forEach((name,i)=>{
+  const norm=normalizeEliteItemName(name);
+  SUPER_ELITE_IDS.set(norm,si+':'+i);
+  SUPER_ELITE_IDS.set(norm.replace(/[äöü]/g,"'"),si+':'+i);
+}));
+function completeSuperEliteSet(ids){
+  for(let si=0;si<SUPER_ELITE_SETS.length;si++){
+    if(SUPER_ELITE_SETS[si].every((_,i)=>ids.has(si+':'+i))) return si;
+  }
+  return -1;
+}
+// Unit value of one Super Elite of the given set: the entered price of each
+// of its five items (a German item falls back to its English counterpart).
+function superEliteSetValue(si,priceForItem){
+  return SUPER_ELITE_SETS[si].reduce((sum,name,i)=>
+    sum+(priceForItem(name)||priceForItem(SUPER_ELITE_SETS[0][i])),0);
+}
+
 function parseSuperEliteBlocks(text){
   const lines=text.split(/\r?\n/);
   const re=/^\[(\d{2})\/(\d{2})\/(\d{2})\]\s+\[(\d{2}):(\d{2}):(\d{2})(?:[\.,](\d{1,3}))?\]:\s+You receive (\d+) (.+?)\.?\s*$/;
-  const expected=new Set([
-    'skill book chest [m-g]',
-    'skill book chest [g-p]',
-    'divine blessing',
-    'divine enchanting',
-    "nataraja's medallion"
-  ]);
-
   const parsed=[];
   for(let index=0; index<lines.length; index++){
     const m=lines[index].match(re);
@@ -1107,7 +1126,8 @@ function parseSuperEliteBlocks(text){
       qty:Number(qtyRaw),
       qtyRaw,
       item:itemRaw.trim(),
-      norm:normalizeEliteItemName(itemRaw)
+      norm:normalizeEliteItemName(itemRaw),
+      id:SUPER_ELITE_IDS.get(normalizeEliteItemName(itemRaw))
     });
   }
 
@@ -1116,7 +1136,7 @@ function parseSuperEliteBlocks(text){
   // lines can carry the same timestamp.  Group target drops by timestamp,
   // allowing a maximum 2-second gap between consecutive target lines.
   const targetEvents=parsed
-    .filter(e=>expected.has(e.norm))
+    .filter(e=>e.id)
     .sort((a,b)=>a.ts-b.ts || a.index-b.index);
 
   const clusters=[];
@@ -1133,11 +1153,8 @@ function parseSuperEliteBlocks(text){
 
   const blocks=[];
   for(const c of clusters){
-    const names=new Set(c.map(e=>e.norm));
-    if(names.size!==expected.size) continue;
-    let hasAll=true;
-    for(const name of expected) if(!names.has(name)){hasAll=false;break;}
-    if(!hasAll) continue;
+    const set=completeSuperEliteSet(new Set(c.map(e=>e.id)));
+    if(set<0) continue;
 
     // Use the earliest timestamp in the five-item burst as the anchor.
     // The Yang may be just before or after it, but must be within +/-1s and
@@ -1155,7 +1172,7 @@ function parseSuperEliteBlocks(text){
     });
 
     const yang=yangCandidates[0];
-    blocks.push({ts:blockTs,yangTs:yang ? yang.ts : blockTs,yang:yang ? yang.qty : 0});
+    blocks.push({ts:blockTs,yangTs:yang ? yang.ts : blockTs,yang:yang ? yang.qty : 0,set});
   }
 
   return blocks;
@@ -1435,24 +1452,15 @@ function update(){
   // Each Super Elite also includes the user-entered unit prices of all five
   // items that make up the Super Elite. One of each item is counted per
   // detected Super Elite, so N Super Elites add N times the five prices.
-  const superEliteItemNames=[
-    "Skill Book Chest [M-G]",
-    "Skill Book Chest [G-P]",
-    "Divine Blessing",
-    "Divine Enchanting",
-    "Nataraja's Medallion"
-  ];
 
   const priceForItem=(wanted)=>{
     const key=Object.keys(prices).find(k=>k.trim().toLowerCase()===wanted.trim().toLowerCase());
     return key ? parseYangPrice(prices[key]) : 0;
   };
 
-  const superEliteItemsUnitValue=superEliteItemNames.reduce(
-    (sum,name)=>sum+priceForItem(name),0
+  const superEliteYangFromItems=selectedEliteBlocks.reduce(
+    (sum,b)=>sum+superEliteSetValue(b.set||0,priceForItem),0
   );
-
-  const superEliteYangFromItems=superEliteCount*superEliteItemsUnitValue;
   const superEliteYang=selectedEliteBlocks.reduce((sum,b)=>sum+b.yang,0)
     + superEliteYangFromItems;
 
@@ -1579,13 +1587,6 @@ function updateMaterialTotalsFromInputs(){
 
   const superEliteCount=selectedEliteBlocks.length;
 
-  const superEliteItemNames=[
-    "Skill Book Chest [M-G]",
-    "Skill Book Chest [G-P]",
-    "Divine Blessing",
-    "Divine Enchanting",
-    "Nataraja's Medallion"
-  ];
 
   const priceForItem=(wanted)=>{
     const key=Object.keys(prices).find(
@@ -1594,12 +1595,9 @@ function updateMaterialTotalsFromInputs(){
     return key ? parseYangPrice(prices[key]) : 0;
   };
 
-  const superEliteItemsUnitValue=superEliteItemNames.reduce(
-    (sum,name)=>sum+priceForItem(name),0
+  const superEliteYangFromItems=selectedEliteBlocks.reduce(
+    (sum,b)=>sum+superEliteSetValue(b.set||0,priceForItem),0
   );
-
-  const superEliteYangFromItems=
-    superEliteCount*superEliteItemsUnitValue;
 
   const superEliteYangFromLog=
     selectedEliteBlocks.reduce((sum,b)=>sum+b.yang,0);
@@ -1772,10 +1770,18 @@ function toggleFavorite(name){
 }
 const LOG_WORKER_SOURCE = `
 const lootRe=/^\\[(\\d{2})\\/(\\d{2})\\/(\\d{2})\\]\\s+\\[(\\d{2}):(\\d{2}):(\\d{2})(?:[\\.,](\\d{1,3}))?\\]:\\s+You receive (\\d+) (.+?)\\.?\\s*$/;
-const eliteNames=new Set([
-  'skill book chest [m-g]','skill book chest [g-p]','divine blessing',
-  'divine enchanting',\"nataraja's medallion\"
-]);
+// One Super Elite = all five items of ONE set (English or German names).
+const eliteSets=[
+  ['Skill Book Chest [M-G]','Skill Book Chest [G-P]','Divine Blessing','Divine Enchanting',\"Nataraja's Medallion\"],
+  ['Lektüre Truhe [M-G]','Lektüre Truhe [G-P]','Göttlicher Segen','Göttliches Verzaubern','Natarajas Medaillon']
+];
+const eliteIds=new Map();
+function completeSet(counts){
+  for(let si=0;si<eliteSets.length;si++){
+    if(eliteSets[si].every((_,i)=>(counts.get(si+':'+i)||0)>0)) return si;
+  }
+  return -1;
+}
 function normElite(name){
   return String(name||'')
     .replaceAll("’", "'")
@@ -1793,6 +1799,12 @@ function parseLine(line){
   if(!Number.isFinite(ts)) return null;
   return {ts,qty:Number(qtyRaw),item:itemRaw.trim()};
 }
+// Umlauts may arrive as U+FFFD (normalized to an apostrophe) in non-UTF-8 logs.
+eliteSets.forEach((set,si)=>set.forEach((name,i)=>{
+  const norm=normElite(name);
+  eliteIds.set(norm,si+':'+i);
+  eliteIds.set(norm.replace(/[äöü]/g,\"'\"),si+':'+i);
+}));
 async function readFile(file, fileIndex, totalFiles, onLine){
   const decoder=new TextDecoder('utf-8');
   let buf='';
@@ -1838,10 +1850,11 @@ function findSuperElites(targetEvents, yangEvents){
       if(c<=1) counts.delete(n); else counts.set(n,c-1);
     }
     q.push(e); counts.set(e[2],(counts.get(e[2])||0)+1);
-    if(counts.size===eliteNames.size && [...eliteNames].every(n=>(counts.get(n)||0)>0)){
+    const si=completeSet(counts);
+    if(si>=0){
       // Consume one occurrence of each required item so two very close
       // Super Elite bursts can both be counted independently.
-      const take=new Set(eliteNames);
+      const take=new Set(eliteSets[si].map((_,i)=>si+':'+i));
       const taken=[];
       for(let i=0;i<q.length && take.size;i++){
         if(take.has(q[i][2])){ taken.push(i); take.delete(q[i][2]); }
@@ -1854,7 +1867,7 @@ function findSuperElites(targetEvents, yangEvents){
         for(let j=Math.max(0,lo-2);j<Math.min(yangEvents.length,lo+3);j++){
           const d=Math.abs(yangEvents[j][0]-ts); if(d<=1000 && d<bestDist){best=yangEvents[j];bestDist=d;}
         }
-        blocks.push([ts,best?best[0]:ts,best?best[1]:0]);
+        blocks.push([ts,best?best[0]:ts,best?best[1]:0,si]);
         // Remove one occurrence of each required item from the queue.
         const indices=taken.sort((a,b)=>b-a);
         for(const idx of indices) q.splice(idx,1);
@@ -1883,7 +1896,8 @@ onmessage=async e=>{
         eventSeen.add(key);
         events.push([ts,qty,item]);
         const norm=normElite(item);
-        if(eliteNames.has(norm)) targets.push([ts,fi, norm]);
+        const eliteId=eliteIds.get(norm);
+        if(eliteId) targets.push([ts,fi,eliteId]);
         if(norm==='yang' && String(qty).length>=7) yangs.push([ts,qty]);
       });
     }
@@ -1927,7 +1941,7 @@ async function setLogs(files){
       }
       if(m.type==='done'){
         state.events=m.events.map(e=>({ts:new Date(e[0]),qty:e[1],item:e[2]}));
-        state.eliteBlocks=m.eliteBlocks.map(b=>({ts:new Date(b[0]),yangTs:new Date(b[1]),yang:b[2]}));
+        state.eliteBlocks=m.eliteBlocks.map(b=>({ts:new Date(b[0]),yangTs:new Date(b[1]),yang:b[2],set:b[3]||0}));
         state.fileNames=fileList.map(f=>f.name);
         state.range='all';
 
